@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { UTCTimestamp } from 'lightweight-charts';
 
-const API_KEY = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'demo';
+// START: Temporary Hardcode to bypass Env Var issue
+const API_KEY = '5787667ee1de48e2807600f886b4f217';
+// const API_KEY = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'demo'; 
+// END: Temporary Hardcode
+
 const BASE_URL = 'https://api.twelvedata.com';
 
 export interface CandleData {
