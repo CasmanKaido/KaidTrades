@@ -1,4 +1,4 @@
-import { ColorType, createChart, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
+import { ColorType, createChart, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
 import React, { useEffect, useRef } from 'react';
 
 interface ChartComponentProps {
@@ -56,7 +56,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
 
         chartRef.current = chart;
 
-        const candleSeries = chart.addCandlestickSeries({
+        const candleSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#26a69a',
             downColor: '#ef5350',
             borderVisible: false,
