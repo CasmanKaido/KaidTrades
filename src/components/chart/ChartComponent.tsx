@@ -12,8 +12,9 @@ interface ChartComponentProps {
     };
 }
 
-export const ChartComponent: React.FC<ChartComponentProps> = ({
+export const ChartComponent: React.FC<ChartComponentProps & { lastCandle?: { time: UTCTimestamp; open: number; high: number; low: number; close: number } }> = ({
     data,
+    lastCandle,
     colors: {
         backgroundColor = '#131722',
         lineColor = '#2962FF',
@@ -24,7 +25,9 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
 }) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
+    const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
+    // Initial Chart Creation & Historical Data
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
@@ -78,7 +81,9 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
             wickDownColor: '#ef5350',
         });
 
-        candleSeries.setData(data); // Casting might be valid depending on data shape, lightweight-charts expects sorted data
+        seriesRef.current = candleSeries;
+
+        candleSeries.setData(data);
 
         window.addEventListener('resize', handleResize);
 
@@ -87,6 +92,13 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
             chart.remove();
         };
     }, [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]);
+
+    // Real-time Updates
+    useEffect(() => {
+        if (seriesRef.current && lastCandle) {
+            seriesRef.current.update(lastCandle);
+        }
+    }, [lastCandle]);
 
     return (
         <div

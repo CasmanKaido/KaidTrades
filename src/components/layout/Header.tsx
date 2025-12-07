@@ -1,19 +1,18 @@
 import {
-    Search,
-    Settings,
-    Menu,
     Plus,
     ChevronDown,
-    MonitorPlay,
     Camera,
-    Search as SearchIcon,
     BarChart2,
     Undo2,
     Redo2,
-    LayoutTemplate
+    LayoutTemplate,
+    Settings
 } from "lucide-react";
+import { useStore } from "@/store/useStore";
 
 export function Header() {
+    const { symbol, interval, setInterval } = useStore();
+
     return (
         <header className="flex h-[52px] w-full items-center justify-between border-b border-[#2a2e39] bg-[#131722] px-3 font-sans text-[#d1d4dc]">
             {/* Left Section */}
@@ -26,7 +25,7 @@ export function Header() {
 
                 <button className="flex items-center gap-2 rounded hover:bg-[#2a2e39] px-2 py-1.5 transition-colors group">
                     <div className="flex flex-col items-start leading-none">
-                        <span className="font-bold text-sm text-white">BTCUSDT</span>
+                        <span className="font-bold text-sm text-white">{symbol}</span>
                         <span className="text-[10px] text-[#505d74]">BINANCE</span>
                     </div>
                 </button>
@@ -38,8 +37,12 @@ export function Header() {
                 </button>
 
                 <div className="hidden items-center gap-0.5 sm:flex mx-1">
-                    {['1m', '5m', '15m', '30m', '1h', '4h', 'D', 'W', 'M'].map((tf) => (
-                        <button key={tf} className={`min-w-[28px] h-[28px] rounded flex items-center justify-center text-sm font-medium transition-colors ${tf === '1h' ? 'text-[#2962ff] bg-[#2962ff]/10' : 'hover:bg-[#2a2e39] hover:text-[#2962ff]'}`}>
+                    {['1m', '5m', '15m', '30m', '1h', '4h', '1d', '1w'].map((tf) => (
+                        <button
+                            key={tf}
+                            onClick={() => setInterval(tf)}
+                            className={`min-w-[28px] h-[28px] rounded flex items-center justify-center text-sm font-medium transition-colors ${interval === tf ? 'text-[#2962ff] bg-[#2962ff]/10' : 'hover:bg-[#2a2e39] hover:text-[#2962ff]'}`}
+                        >
                             {tf}
                         </button>
                     ))}

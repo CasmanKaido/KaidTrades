@@ -1,11 +1,11 @@
-
 "use client";
-
 import dynamic from "next/dynamic";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { generateData } from "@/utils/mockData";
-import { useMemo } from "react";
+import { Watchlist } from "@/components/layout/Watchlist";
+import { useStore } from "@/store/useStore";
+import { fetchHistoricalData, subscribeToTicker, CandleData } from "@/services/binanceService";
+import { useEffect, useState } from "react";
 
 const ChartComponent = dynamic(
   () => import("@/components/chart/ChartComponent").then((mod) => mod.ChartComponent),
@@ -13,7 +13,30 @@ const ChartComponent = dynamic(
 );
 
 export default function Home() {
-  const data = useMemo(() => generateData(1000), []);
+  const { symbol, interval } = useStore();
+  const [data, setData] = useState<CandleData[]>([]);
+  const [lastCandle, setLastCandle] = useState<CandleData | undefined>(undefined);
+
+  useEffect(() => {
+    // Reset data on symbol/interval change to avoid showing old data
+    setData([]);
+    setLastCandle(undefined);
+
+    const loadData = async () => {
+      const historical = await fetchHistoricalData(symbol, interval);
+      setData(historical);
+    };
+
+    loadData();
+
+    const unsubscribe = subscribeToTicker(symbol, interval, (candle) => {
+      setLastCandle(candle);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [symbol, interval]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#131722] text-[#d1d4dc]">
@@ -21,8 +44,15 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="relative flex-1">
-          <ChartComponent data={data} />
+          {data.length > 0 ? (
+            <ChartComponent data={data} lastCandle={lastCandle} />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          )}
         </main>
+        <Watchlist />
       </div>
     </div>
   );
