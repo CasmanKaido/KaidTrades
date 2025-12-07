@@ -156,6 +156,12 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         emaSeriesRef.current.setData(emaData || []);
     }, [emaData]);
 
+    // Update Candle Data when historical data changes
+    useEffect(() => {
+        if (!candleSeriesRef) return;
+        candleSeriesRef.setData(data);
+    }, [data, candleSeriesRef]);
+
     // Real-time Updates
     useEffect(() => {
         if (candleSeriesRef && lastCandle) {
