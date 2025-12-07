@@ -1,3 +1,15 @@
+import axios from 'axios';
+import { UTCTimestamp } from 'lightweight-charts';
+
+const API_KEY = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'demo';
+const BASE_URL = 'https://api.twelvedata.com';
+
+export interface CandleData {
+    time: UTCTimestamp;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
 }
 
 export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w';
