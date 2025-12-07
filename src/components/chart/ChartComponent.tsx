@@ -42,8 +42,8 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
             grid: {
-                vertLines: { color: '#2B2B43' },
-                horzLines: { color: '#2B2B43' },
+                vertLines: { color: '#1e222d' },
+                horzLines: { color: '#1e222d' },
             },
             timeScale: {
                 borderColor: '#2B2B43',
@@ -51,7 +51,21 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
             },
             rightPriceScale: {
                 borderColor: '#2B2B43',
-            }
+            },
+            crosshair: {
+                vertLine: {
+                    color: '#758696',
+                    width: 1,
+                    style: 3,
+                    labelBackgroundColor: '#758696',
+                },
+                horzLine: {
+                    color: '#758696',
+                    width: 1,
+                    style: 3,
+                    labelBackgroundColor: '#758696',
+                },
+            },
         });
 
         chartRef.current = chart;
