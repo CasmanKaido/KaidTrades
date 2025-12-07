@@ -1,8 +1,10 @@
-import { ColorType, createChart, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
+import { ColorType, createChart, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries, LineSeries } from 'lightweight-charts';
 import React, { useEffect, useRef } from 'react';
 
 interface ChartComponentProps {
     data: { time: UTCTimestamp; open: number; high: number; low: number; close: number }[];
+    lastCandle?: { time: UTCTimestamp; open: number; high: number; low: number; close: number };
+    smaData?: { time: UTCTimestamp; value: number }[];
     colors?: {
         backgroundColor?: string;
         lineColor?: string;
@@ -12,9 +14,10 @@ interface ChartComponentProps {
     };
 }
 
-export const ChartComponent: React.FC<ChartComponentProps & { lastCandle?: { time: UTCTimestamp; open: number; high: number; low: number; close: number } }> = ({
+export const ChartComponent: React.FC<ChartComponentProps> = ({
     data,
     lastCandle,
+    smaData,
     colors: {
         backgroundColor = '#131722',
         lineColor = '#2962FF',
@@ -25,7 +28,8 @@ export const ChartComponent: React.FC<ChartComponentProps & { lastCandle?: { tim
 }) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
-    const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+    const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+    const smaSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
 
     // Initial Chart Creation & Historical Data
     useEffect(() => {
@@ -73,6 +77,7 @@ export const ChartComponent: React.FC<ChartComponentProps & { lastCandle?: { tim
 
         chartRef.current = chart;
 
+        // Candlestick Series
         const candleSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#26a69a',
             downColor: '#ef5350',
@@ -80,10 +85,20 @@ export const ChartComponent: React.FC<ChartComponentProps & { lastCandle?: { tim
             wickUpColor: '#26a69a',
             wickDownColor: '#ef5350',
         });
-
-        seriesRef.current = candleSeries;
-
+        candleSeriesRef.current = candleSeries;
         candleSeries.setData(data);
+
+        // SMA Series (Line)
+        const smaSeries = chart.addSeries(LineSeries, {
+            color: '#2962FF',
+            lineWidth: 2,
+            priceScaleId: 'right', // Bind to same scale
+            crosshairMarkerVisible: false,
+        });
+        smaSeriesRef.current = smaSeries;
+        if (smaData) {
+            smaSeries.setData(smaData);
+        }
 
         window.addEventListener('resize', handleResize);
 
@@ -91,12 +106,18 @@ export const ChartComponent: React.FC<ChartComponentProps & { lastCandle?: { tim
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]);
+    }, [data, smaData, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]);
 
     // Real-time Updates
     useEffect(() => {
-        if (seriesRef.current && lastCandle) {
-            seriesRef.current.update(lastCandle);
+        if (candleSeriesRef.current && lastCandle) {
+            candleSeriesRef.current.update(lastCandle);
+
+            // Basic SMA update estimate for the last candle 
+            // (Note: accurate live indicator updates usually require re-calc of whole window, 
+            // but for visual smoothness we can append if we tracked history. 
+            // For now, indicators update only on full refresh/history load to keep it simple, 
+            // or we'd need to pass updated SMA last point too.)
         }
     }, [lastCandle]);
 
