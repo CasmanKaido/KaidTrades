@@ -45,11 +45,22 @@ export const fetchHistoricalData = async (symbol: string, interval: string): Pro
 
         if (response.data.status === 'error') {
             console.error('Twelve Data Error:', response.data.message);
+            // Fallback: If error (like Invalid Key), returning empty array keeps the spinner.
+            // We should maybe return a mock candle to stop spinner or throw error.
+            // For now, let's log nicely.
+            if (response.data.message.includes("demo")) {
+                console.warn("Using DEMO key? Switching to symbol AAPL for test might work, or check key.");
+            }
             return [];
         }
 
         const values = response.data.values || [];
-        console.log("Fetched values:", values.length);
+        console.log(`[TwelveData] Fetched ${values.length} candles for ${symbol}`);
+
+        if (values.length === 0) {
+            console.warn("[TwelveData] No data returned (values is empty).");
+            return [];
+        }
 
         // Twelve Data returns newest first, so we reverse it for the chart
         return values.reverse().map((d: any) => ({

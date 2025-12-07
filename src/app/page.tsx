@@ -66,8 +66,12 @@ export default function Home() {
               emaData={emaData}
             />
           ) : (
-            <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col h-full items-center justify-center text-[#505d74] gap-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="text-xs max-w-xs text-center">
+                Waiting for data... <br />
+                (Check Console F12 if this persists. API Key issue?)
+              </div>
             </div>
           )}
         </main>
