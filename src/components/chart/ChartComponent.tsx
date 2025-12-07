@@ -43,19 +43,6 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
-        // Cleanup function for checking if component is unmounted
-        let isAuthored = true;
-
-        const handleResize = () => {
-            if (chartContainerRef.current && isAuthored) {
-                const { clientWidth, clientHeight } = chartContainerRef.current;
-                setDimensions({ width: clientWidth, height: clientHeight });
-                // Chart instance might not be available yet in this closure if not careful, 
-                // but we can access it via the local var 'chart' if we define it here, 
-                // OR we rely on state updates. Use resize observer pattern generally better.
-            }
-        };
-
         const chart = createChart(chartContainerRef.current, {
             layout: {
                 background: { type: ColorType.Solid, color: backgroundColor },
@@ -92,16 +79,6 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
 
         setChartRef(chart);
 
-        // Resize handler that uses the created chart instance
-        const resizeHandler = () => {
-            if (chartContainerRef.current) {
-                const w = chartContainerRef.current.clientWidth;
-                const h = chartContainerRef.current.clientHeight;
-                chart.applyOptions({ width: w, height: h });
-                setDimensions({ width: w, height: h });
-            }
-        };
-
         // Candlestick Series
         const candleSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#26a69a',
@@ -113,7 +90,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         setCandleSeriesRef(candleSeries);
         candleSeries.setData(data);
 
-        // SMA Series (Line)
+        // SMA Series
         const smaSeries = chart.addSeries(LineSeries, {
             color: '#2962FF',
             lineWidth: 2,
@@ -123,7 +100,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         smaSeriesRef.current = smaSeries;
         if (smaData) smaSeries.setData(smaData);
 
-        // EMA Series (Line)
+        // EMA Series
         const emaSeries = chart.addSeries(LineSeries, {
             color: '#FF9800', // Orange
             lineWidth: 2,
@@ -133,14 +110,23 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         emaSeriesRef.current = emaSeries;
         if (emaData) emaSeries.setData(emaData);
 
-        window.addEventListener('resize', resizeHandler);
+        // ResizeObserver for robust sizing
+        const resizeObserver = new ResizeObserver((entries) => {
+            if (entries.length === 0 || entries[0].target !== chartContainerRef.current) return;
+            const newRect = entries[0].contentRect;
 
-        // Initial set dimensions
-        resizeHandler();
+            // Should usually use Math.max(1, ...) to avoid 0 errors
+            const width = Math.max(1, newRect.width);
+            const height = Math.max(1, newRect.height);
+
+            chart.applyOptions({ width, height });
+            setDimensions({ width, height });
+        });
+
+        resizeObserver.observe(chartContainerRef.current);
 
         return () => {
-            isAuthored = false;
-            window.removeEventListener('resize', resizeHandler);
+            resizeObserver.disconnect();
             chart.remove();
         };
     }, []);
