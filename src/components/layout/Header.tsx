@@ -11,10 +11,12 @@ import {
 import { useStore } from "@/store/useStore";
 import { useState } from "react";
 import { SymbolSearch } from "./SymbolSearch";
+import { IndicatorsModal } from "./IndicatorsModal";
 
 export function Header() {
     const { symbol, interval, setInterval } = useStore();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isIndicatorsOpen, setIsIndicatorsOpen] = useState(false);
 
     return (
         <>
@@ -62,7 +64,11 @@ export function Header() {
                     <div className="h-5 w-px bg-[#2a2e39] mx-2" />
 
                     <div className="flex items-center gap-1">
-                        <button className="flex items-center gap-1 hover:bg-[#2a2e39] hover:text-[#2962ff] px-2 py-1.5 rounded transition-colors text-sm font-medium text-[#d1d4dc]" title="Indicators">
+                        <button
+                            onClick={() => setIsIndicatorsOpen(true)}
+                            className="flex items-center gap-1 hover:bg-[#2a2e39] hover:text-[#2962ff] px-2 py-1.5 rounded transition-colors text-sm font-medium text-[#d1d4dc]"
+                            title="Indicators"
+                        >
                             <BarChart2 className="h-4 w-4" />
                             <span className="hidden lg:inline">Indicators</span>
                         </button>
@@ -107,6 +113,7 @@ export function Header() {
                 </div>
             </header>
             <SymbolSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+            <IndicatorsModal isOpen={isIndicatorsOpen} onClose={() => setIsIndicatorsOpen(false)} />
         </>
     );
 }

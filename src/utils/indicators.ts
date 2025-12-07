@@ -27,3 +27,25 @@ export const calculateSMA = (data: CandleData[], period: number = 20): LineData[
 
     return smaData;
 };
+
+export const calculateEMA = (data: CandleData[], period: number = 20): LineData[] => {
+    const emaData: LineData[] = [];
+    const k = 2 / (period + 1);
+
+    let previousEma = data[0].close; // Simple starting point
+
+    // Better initialization would be SMA of first N periods, but simple start for now
+    for (let i = 0; i < data.length; i++) {
+        const close = data[i].close;
+        const ema = close * k + previousEma * (1 - k);
+
+        emaData.push({
+            time: data[i].time,
+            value: ema
+        });
+
+        previousEma = ema;
+    }
+
+    return emaData;
+};

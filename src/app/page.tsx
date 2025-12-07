@@ -6,7 +6,7 @@ import { Watchlist } from "@/components/layout/Watchlist";
 import { useStore } from "@/store/useStore";
 import { fetchHistoricalData, subscribeToTicker, CandleData } from "@/services/binanceService";
 import { useEffect, useState, useMemo } from "react";
-import { calculateSMA, LineData } from "@/utils/indicators";
+import { calculateSMA, calculateEMA, LineData } from "@/utils/indicators";
 
 const ChartComponent = dynamic(
   () => import("@/components/chart/ChartComponent").then((mod) => mod.ChartComponent),
@@ -14,12 +14,13 @@ const ChartComponent = dynamic(
 );
 
 export default function Home() {
-  const { symbol, interval } = useStore();
+  const { symbol, interval, indicators } = useStore();
   const [data, setData] = useState<CandleData[]>([]);
   const [lastCandle, setLastCandle] = useState<CandleData | undefined>(undefined);
 
-  // Calculate SMA whenever base data changes
-  const smaData = useMemo(() => calculateSMA(data, 20), [data]);
+  // Calculate Indicators
+  const smaData = useMemo(() => indicators.sma ? calculateSMA(data, 20) : undefined, [data, indicators.sma]);
+  const emaData = useMemo(() => indicators.ema ? calculateEMA(data, 20) : undefined, [data, indicators.ema]);
 
   useEffect(() => {
     // Reset data on symbol/interval change to avoid showing old data
@@ -53,6 +54,7 @@ export default function Home() {
               data={data}
               lastCandle={lastCandle}
               smaData={smaData}
+              emaData={emaData}
             />
           ) : (
             <div className="flex h-full items-center justify-center">

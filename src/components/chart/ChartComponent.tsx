@@ -5,6 +5,7 @@ interface ChartComponentProps {
     data: { time: UTCTimestamp; open: number; high: number; low: number; close: number }[];
     lastCandle?: { time: UTCTimestamp; open: number; high: number; low: number; close: number };
     smaData?: { time: UTCTimestamp; value: number }[];
+    emaData?: { time: UTCTimestamp; value: number }[];
     colors?: {
         backgroundColor?: string;
         lineColor?: string;
@@ -18,6 +19,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
     data,
     lastCandle,
     smaData,
+    emaData,
     colors: {
         backgroundColor = '#131722',
         lineColor = '#2962FF',
@@ -30,6 +32,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
     const chartRef = useRef<IChartApi | null>(null);
     const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
     const smaSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
+    const emaSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
 
     // Initial Chart Creation & Historical Data
     useEffect(() => {
@@ -92,13 +95,21 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         const smaSeries = chart.addSeries(LineSeries, {
             color: '#2962FF',
             lineWidth: 2,
-            priceScaleId: 'right', // Bind to same scale
+            priceScaleId: 'right',
             crosshairMarkerVisible: false,
         });
         smaSeriesRef.current = smaSeries;
-        if (smaData) {
-            smaSeries.setData(smaData);
-        }
+        if (smaData) smaSeries.setData(smaData);
+
+        // EMA Series (Line)
+        const emaSeries = chart.addSeries(LineSeries, {
+            color: '#FF9800', // Orange
+            lineWidth: 2,
+            priceScaleId: 'right',
+            crosshairMarkerVisible: false,
+        });
+        emaSeriesRef.current = emaSeries;
+        if (emaData) emaSeries.setData(emaData);
 
         window.addEventListener('resize', handleResize);
 
@@ -106,18 +117,23 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, [data, smaData, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]);
+    }, [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]);
+
+    // Handle updates efficiently
+    useEffect(() => {
+        if (!smaSeriesRef.current) return;
+        smaSeriesRef.current.setData(smaData || []);
+    }, [smaData]);
+
+    useEffect(() => {
+        if (!emaSeriesRef.current) return;
+        emaSeriesRef.current.setData(emaData || []);
+    }, [emaData]);
 
     // Real-time Updates
     useEffect(() => {
         if (candleSeriesRef.current && lastCandle) {
             candleSeriesRef.current.update(lastCandle);
-
-            // Basic SMA update estimate for the last candle 
-            // (Note: accurate live indicator updates usually require re-calc of whole window, 
-            // but for visual smoothness we can append if we tracked history. 
-            // For now, indicators update only on full refresh/history load to keep it simple, 
-            // or we'd need to pass updated SMA last point too.)
         }
     }, [lastCandle]);
 
