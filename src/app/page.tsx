@@ -4,7 +4,8 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Watchlist } from "@/components/layout/Watchlist";
 import { useStore } from "@/store/useStore";
-import { fetchHistoricalData, subscribeToTicker, CandleData } from "@/services/binanceService";
+// Switched to Twelve Data
+import { fetchHistoricalData, subscribeToTicker, CandleData } from "@/services/twelveDataService";
 import { useEffect, useState, useMemo } from "react";
 import { calculateSMA, calculateEMA, LineData } from "@/utils/indicators";
 
@@ -34,14 +35,22 @@ export default function Home() {
 
     loadData();
 
-    const unsubscribe = subscribeToTicker(symbol, interval, (candle) => {
-      setLastCandle(candle);
+    // Twelve Data simple polling/subscription
+    // Note: Subscribe now only takes symbol, no interval need for simple price updates
+    const unsubscribe = subscribeToTicker(symbol, (price) => {
+      // We need to create a pseduo-candle or update the last existing candle with the new price
+      // For simplicity, we just update the CLOSE of the last known candle
+      setLastCandle(prev => {
+        if (!prev && data.length > 0) return { ...data[data.length - 1], close: price };
+        if (prev) return { ...prev, close: price, high: Math.max(prev.high, price), low: Math.min(prev.low, price) };
+        return undefined;
+      });
     });
 
     return () => {
       unsubscribe();
     };
-  }, [symbol, interval]);
+  }, [symbol, interval, data.length]); // added data.length to effect so it re-binds when data loads
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#131722] text-[#d1d4dc]">

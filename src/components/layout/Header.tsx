@@ -12,7 +12,8 @@ import { useStore } from "@/store/useStore";
 import { useState, useEffect } from "react";
 import { SymbolSearch } from "./SymbolSearch";
 import { IndicatorsModal } from "./IndicatorsModal";
-import { fetchTicker24h, subscribeToTicker24h, TickerData } from "@/services/binanceService";
+// Switched to Twelve Data
+import { fetchTicker24h, TickerData } from "@/services/twelveDataService";
 
 export function Header() {
     const { symbol, interval, setInterval } = useStore();
@@ -23,6 +24,7 @@ export function Header() {
     useEffect(() => {
         const loadTicker = async () => {
             try {
+                // Ticker data for header
                 const data = await fetchTicker24h(symbol);
                 setTicker(data);
             } catch (error) {
@@ -31,15 +33,15 @@ export function Header() {
         };
 
         loadTicker();
-        const unsubscribe = subscribeToTicker24h(symbol, (data) => setTicker(data));
+        // Polling for header stats (every 10s to be safe on limits)
+        const intervalId = setInterval(loadTicker, 10000);
 
-        return () => {
-            unsubscribe();
-        };
+        return () => clearInterval(intervalId);
     }, [symbol]);
 
-    const formatPrice = (price: string) => parseFloat(price).toFixed(2);
-    const formatVol = (vol: string) => {
+    const formatPrice = (price: string | undefined) => price ? parseFloat(price).toFixed(2) : '0.00';
+    const formatVol = (vol: string | undefined) => {
+        if (!vol) return '0';
         const v = parseFloat(vol);
         if (v >= 1000000) return (v / 1000000).toFixed(2) + 'M';
         if (v >= 1000) return (v / 1000).toFixed(2) + 'K';

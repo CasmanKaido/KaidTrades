@@ -8,12 +8,22 @@ interface SymbolSearchProps {
 }
 
 // Popular Binance pairs for demo
-const POPULAR_PAIRS = [
-    "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
-    "DOGEUSDT", "SHIBUSDT", "AVAXUSDT", "DOTUSDT", "MATICUSDT", "LTCUSDT",
-    "UNIUSDT", "LINKUSDT", "ATOMUSDT", "ETCUSDT", "XLMUSDT", "BCHUSDT",
-    "NEARUSDT", "ALGOUSDT", "FILUSDT", "TRXUSDT", "APEUSDT", "SANDUSDT",
-    "MANAUSDT", "AXSUSDT", "GALAUSDT", "FTMUSDT", "AAVEUSDT", "EGLDUSDT"
+// Demo Symbols
+const SYMBOLS = [
+    { symbol: 'EUR/USD', description: 'Euro / US Dollar', type: 'Forex' },
+    { symbol: 'USD/JPY', description: 'US Dollar / Japanese Yen', type: 'Forex' },
+    { symbol: 'GBP/USD', description: 'British Pound / US Dollar', type: 'Forex' },
+    { symbol: 'USD/CAD', description: 'US Dollar / Canadian Dollar', type: 'Forex' },
+    { symbol: 'AUD/USD', description: 'Australian Dollar / US Dollar', type: 'Forex' },
+    { symbol: 'BTC/USD', description: 'Bitcoin / US Dollar', type: 'Crypto' },
+    { symbol: 'ETH/USD', description: 'Ethereum / US Dollar', type: 'Crypto' },
+    { symbol: 'SPX', description: 'S&P 500', type: 'Index' },
+    { symbol: 'NDX', description: 'Nasdaq 100', type: 'Index' },
+    { symbol: 'DJI', description: 'Dow Jones Industrial Average', type: 'Index' },
+    { symbol: 'XAU/USD', description: 'Gold / US Dollar', type: 'Forex' }, // Processed as stock/forex by TD
+    { symbol: 'AAPL', description: 'Apple Inc', type: 'Stock' },
+    { symbol: 'TSLA', description: 'Tesla Inc', type: 'Stock' },
+    { symbol: 'NVDA', description: 'NVIDIA Corp', type: 'Stock' },
 ];
 
 export function SymbolSearch({ isOpen, onClose }: SymbolSearchProps) {
@@ -30,8 +40,9 @@ export function SymbolSearch({ isOpen, onClose }: SymbolSearchProps) {
 
     if (!isOpen) return null;
 
-    const filteredPairs = POPULAR_PAIRS.filter(pair =>
-        pair.toLowerCase().includes(query.toLowerCase())
+    const filteredSymbols = SYMBOLS.filter(s =>
+        s.symbol.toLowerCase().includes(query.toLowerCase()) ||
+        s.description.toLowerCase().includes(query.toLowerCase())
     );
 
     const handleSelect = (symbol: string) => {
@@ -49,7 +60,7 @@ export function SymbolSearch({ isOpen, onClose }: SymbolSearchProps) {
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder="Search symbol (e.g. BTCUSDT)..."
+                        placeholder="Search symbol (e.g. EUR/USD)..."
                         className="flex-1 bg-transparent text-lg text-[#d1d4dc] placeholder-[#505d74] focus:outline-none"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -61,22 +72,22 @@ export function SymbolSearch({ isOpen, onClose }: SymbolSearchProps) {
 
                 {/* List */}
                 <div className="max-h-[60vh] overflow-y-auto py-2">
-                    <div className="px-4 py-1.5 text-xs font-semibold text-[#505d74]">CRYPTO</div>
-                    {filteredPairs.length > 0 ? (
-                        filteredPairs.map((pair) => (
+                    {filteredSymbols.length > 0 ? (
+                        filteredSymbols.map((item) => (
                             <button
-                                key={pair}
-                                onClick={() => handleSelect(pair)}
-                                className="flex w-full items-center px-4 py-2 hover:bg-[#2a2e39] transition-colors"
+                                key={item.symbol}
+                                onClick={() => handleSelect(item.symbol)}
+                                className="flex w-full items-center px-4 py-2 hover:bg-[#2a2e39] transition-colors gap-3"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a2e39] text-[10px] font-bold text-[#d1d4dc]">
-                                        {pair.substring(0, 1)}
-                                    </div>
-                                    <div className="flex flex-col items-start">
-                                        <span className="font-bold text-sm text-[#d1d4dc]">{pair}</span>
-                                        <span className="text-xs text-[#505d74]">BINANCE</span>
-                                    </div>
+                                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-[#d1d4dc] ${item.type === 'Crypto' ? 'bg-orange-500/20 text-orange-400' : item.type === 'Forex' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                    {item.symbol.substring(0, 1)}
+                                </div>
+                                <div className="flex flex-col items-start whitespace-nowrap">
+                                    <span className="font-bold text-sm text-[#d1d4dc]">{item.symbol}</span>
+                                    <span className="text-xs text-[#505d74]">{item.description}</span>
+                                </div>
+                                <div className="ml-auto text-[10px] text-[#505d74] border border-[#2a2e39] rounded px-1.5 py-0.5">
+                                    {item.type.toUpperCase()}
                                 </div>
                             </button>
                         ))
