@@ -13,15 +13,16 @@ export interface CandleData {
     close: number;
 }
 
-const BASE_URL = 'https://api.binance.com/api/v3';
+const BASE_URL = '/api/proxy';
 
 export const fetchHistoricalData = async (symbol: string, interval: string): Promise<CandleData[]> => {
     try {
-        const response = await axios.get(`${BASE_URL}/klines`, {
+        const response = await axios.get(BASE_URL, {
             params: {
+                path: 'klines',
                 symbol: symbol.toUpperCase(),
                 interval: interval,
-                limit: 1000, // Max data points to fetch
+                limit: 1000,
             },
         });
 
@@ -36,6 +37,18 @@ export const fetchHistoricalData = async (symbol: string, interval: string): Pro
         console.error('Error fetching historical data:', error);
         return [];
     }
+};
+
+// ... WebSocket functions stay the same ...
+
+export const fetchTicker24h = async (symbol: string): Promise<TickerData> => {
+    const response = await axios.get(BASE_URL, {
+        params: {
+            path: 'ticker/24hr',
+            symbol: symbol.toUpperCase()
+        }
+    });
+    return response.data;
 };
 
 export const subscribeToTicker = (symbol: string, interval: string, onUpdate: (candle: CandleData) => void) => {
@@ -85,10 +98,6 @@ export interface TickerData {
     count: number;
 }
 
-export const fetchTicker24h = async (symbol: string): Promise<TickerData> => {
-    const response = await axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol.toUpperCase()}`);
-    return response.data;
-};
 
 export const subscribeToTicker24h = (symbol: string, callback: (data: TickerData) => void) => {
     const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
