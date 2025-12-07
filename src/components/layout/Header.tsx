@@ -1,4 +1,3 @@
-```javascript
 import {
     Plus,
     ChevronDown,
@@ -50,7 +49,7 @@ export function Header() {
                             <button
                                 key={tf}
                                 onClick={() => setInterval(tf)}
-                                className={`min - w - [28px] h - [28px] rounded flex items - center justify - center text - sm font - medium transition - colors ${ interval === tf ? 'text-[#2962ff] bg-[#2962ff]/10' : 'hover:bg-[#2a2e39] hover:text-[#2962ff]' } `}
+                                className={`min-w-[28px] h-[28px] rounded flex items-center justify-center text-sm font-medium transition-colors ${interval === tf ? 'text-[#2962ff] bg-[#2962ff]/10' : 'hover:bg-[#2a2e39] hover:text-[#2962ff]'}`}
                             >
                                 {tf}
                             </button>
@@ -111,4 +110,3 @@ export function Header() {
         </>
     );
 }
-```
