@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { UTCTimestamp } from 'lightweight-charts';
 
-const API_KEY = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'demo'; // 'demo' works for AAPL, etc on some endpoints, rarely Forex
+const API_KEY = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'demo';
 const BASE_URL = 'https://api.twelvedata.com';
+
+console.log(`[TwelveData] Service initialized. Using API Key: ${API_KEY === 'demo' ? 'DEMO MODE' : '***' + API_KEY.slice(-4)}`);
 
 export interface CandleData {
     time: UTCTimestamp;
