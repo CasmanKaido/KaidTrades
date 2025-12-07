@@ -60,3 +60,67 @@ export const subscribeToTicker = (symbol: string, interval: string, onUpdate: (c
         ws.close();
     };
 };
+
+export interface TickerData {
+    symbol: string;
+    priceChange: string;
+    priceChangePercent: string;
+    weightedAvgPrice: string;
+    prevClosePrice: string;
+    lastPrice: string;
+    lastQty: string;
+    bidPrice: string;
+    bidQty: string;
+    askPrice: string;
+    askQty: string;
+    openPrice: string;
+    highPrice: string;
+    lowPrice: string;
+    volume: string;
+    quoteVolume: string;
+    openTime: number;
+    closeTime: number;
+    firstId: number;
+    lastId: number;
+    count: number;
+}
+
+export const fetchTicker24h = async (symbol: string): Promise<TickerData> => {
+    const response = await axios.get(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol.toUpperCase()}`);
+    return response.data;
+};
+
+export const subscribeToTicker24h = (symbol: string, callback: (data: TickerData) => void) => {
+    const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+
+    ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        // Map WS format to Rest format
+        const mappedData: TickerData = {
+            symbol: message.s,
+            priceChange: message.p,
+            priceChangePercent: message.P,
+            weightedAvgPrice: message.w,
+            prevClosePrice: message.x,
+            lastPrice: message.c,
+            lastQty: message.Q,
+            bidPrice: message.b,
+            bidQty: message.B,
+            askPrice: message.a,
+            askQty: message.A,
+            openPrice: message.o,
+            highPrice: message.h,
+            lowPrice: message.l,
+            volume: message.v,
+            quoteVolume: message.q,
+            openTime: message.O,
+            closeTime: message.C,
+            firstId: message.F,
+            lastId: message.L,
+            count: message.n
+        };
+        callback(mappedData);
+    };
+
+    return () => ws.close();
+};

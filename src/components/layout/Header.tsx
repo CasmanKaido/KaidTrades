@@ -9,14 +9,42 @@ import {
     Settings
 } from "lucide-react";
 import { useStore } from "@/store/useStore";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SymbolSearch } from "./SymbolSearch";
 import { IndicatorsModal } from "./IndicatorsModal";
+import { fetchTicker24h, subscribeToTicker24h, TickerData } from "@/services/binanceService";
 
 export function Header() {
     const { symbol, interval, setInterval } = useStore();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isIndicatorsOpen, setIsIndicatorsOpen] = useState(false);
+    const [ticker, setTicker] = useState<TickerData | null>(null);
+
+    useEffect(() => {
+        const loadTicker = async () => {
+            try {
+                const data = await fetchTicker24h(symbol);
+                setTicker(data);
+            } catch (error) {
+                console.error("Failed to load ticker", error);
+            }
+        };
+
+        loadTicker();
+        const unsubscribe = subscribeToTicker24h(symbol, (data) => setTicker(data));
+
+        return () => {
+            unsubscribe();
+        };
+    }, [symbol]);
+
+    const formatPrice = (price: string) => parseFloat(price).toFixed(2);
+    const formatVol = (vol: string) => {
+        const v = parseFloat(vol);
+        if (v >= 1000000) return (v / 1000000).toFixed(2) + 'M';
+        if (v >= 1000) return (v / 1000).toFixed(2) + 'K';
+        return v.toFixed(2);
+    };
 
     return (
         <>
@@ -73,6 +101,37 @@ export function Header() {
                             <span className="hidden lg:inline">Indicators</span>
                         </button>
                     </div>
+                </div>
+
+                {/* Middle Stats Section */}
+                <div className="hidden xl:flex flex-1 items-center justify-center gap-6 text-xs font-medium">
+                    {ticker && (
+                        <>
+                            <div className="flex flex-col items-end">
+                                <span className={`text-sm font-bold ${parseFloat(ticker.priceChange) >= 0 ? 'text-[#089981]' : 'text-[#f23645]'}`}>
+                                    {formatPrice(ticker.lastPrice)}
+                                </span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[#787b86]">24h Change</span>
+                                <span className={`${parseFloat(ticker.priceChange) >= 0 ? 'text-[#089981]' : 'text-[#f23645]'}`}>
+                                    {formatPrice(ticker.priceChange)} ({parseFloat(ticker.priceChangePercent).toFixed(2)}%)
+                                </span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[#787b86]">24h High</span>
+                                <span>{formatPrice(ticker.highPrice)}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[#787b86]">24h Low</span>
+                                <span>{formatPrice(ticker.lowPrice)}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[#787b86]">24h Vol</span>
+                                <span>{formatVol(ticker.volume)}</span>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Center/Right Section */}

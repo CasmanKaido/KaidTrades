@@ -1,5 +1,6 @@
 import { ColorType, createChart, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries, LineSeries } from 'lightweight-charts';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { DrawingOverlay } from './DrawingOverlay';
 
 interface ChartComponentProps {
     data: { time: UTCTimestamp; open: number; high: number; low: number; close: number }[];
@@ -29,8 +30,12 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
     } = {},
 }) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
-    const chartRef = useRef<IChartApi | null>(null);
-    const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+
+    // State to expose instances to DrawingOverlay
+    const [chartRef, setChartRef] = useState<IChartApi | null>(null);
+    const [candleSeriesRef, setCandleSeriesRef] = useState<ISeriesApi<"Candlestick"> | null>(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
     const smaSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
     const emaSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
 
@@ -38,9 +43,16 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
+        // Cleanup function for checking if component is unmounted
+        let isAuthored = true;
+
         const handleResize = () => {
-            if (chartRef.current && chartContainerRef.current) {
-                chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+            if (chartContainerRef.current && isAuthored) {
+                const { clientWidth, clientHeight } = chartContainerRef.current;
+                setDimensions({ width: clientWidth, height: clientHeight });
+                // Chart instance might not be available yet in this closure if not careful, 
+                // but we can access it via the local var 'chart' if we define it here, 
+                // OR we rely on state updates. Use resize observer pattern generally better.
             }
         };
 
@@ -78,7 +90,17 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
             },
         });
 
-        chartRef.current = chart;
+        setChartRef(chart);
+
+        // Resize handler that uses the created chart instance
+        const resizeHandler = () => {
+            if (chartContainerRef.current) {
+                const w = chartContainerRef.current.clientWidth;
+                const h = chartContainerRef.current.clientHeight;
+                chart.applyOptions({ width: w, height: h });
+                setDimensions({ width: w, height: h });
+            }
+        };
 
         // Candlestick Series
         const candleSeries = chart.addSeries(CandlestickSeries, {
@@ -88,7 +110,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
             wickUpColor: '#26a69a',
             wickDownColor: '#ef5350',
         });
-        candleSeriesRef.current = candleSeries;
+        setCandleSeriesRef(candleSeries);
         candleSeries.setData(data);
 
         // SMA Series (Line)
@@ -111,13 +133,17 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         emaSeriesRef.current = emaSeries;
         if (emaData) emaSeries.setData(emaData);
 
-        window.addEventListener('resize', handleResize);
+        window.addEventListener('resize', resizeHandler);
+
+        // Initial set dimensions
+        resizeHandler();
 
         return () => {
-            window.removeEventListener('resize', handleResize);
+            isAuthored = false;
+            window.removeEventListener('resize', resizeHandler);
             chart.remove();
         };
-    }, [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]);
+    }, []);
 
     // Handle updates efficiently
     useEffect(() => {
@@ -132,15 +158,25 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
 
     // Real-time Updates
     useEffect(() => {
-        if (candleSeriesRef.current && lastCandle) {
-            candleSeriesRef.current.update(lastCandle);
+        if (candleSeriesRef && lastCandle) {
+            candleSeriesRef.update(lastCandle);
         }
-    }, [lastCandle]);
+    }, [lastCandle, candleSeriesRef]);
 
     return (
-        <div
-            ref={chartContainerRef}
-            className="h-full w-full"
-        />
+        <div className="relative h-full w-full">
+            <div
+                ref={chartContainerRef}
+                className="h-full w-full"
+            />
+            {chartRef && candleSeriesRef && (
+                <DrawingOverlay
+                    chart={chartRef}
+                    series={candleSeriesRef}
+                    width={dimensions.width}
+                    height={dimensions.height}
+                />
+            )}
+        </div>
     );
 };
