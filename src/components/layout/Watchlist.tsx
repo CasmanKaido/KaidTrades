@@ -1,13 +1,17 @@
 import { MoreHorizontal, Plus } from "lucide-react";
+import { useStore } from "@/store/useStore";
 
 export function Watchlist() {
+    const { setSymbol, symbol: currentSymbol } = useStore();
+
     const watchlistItems = [
         { symbol: "BTCUSDT", last: 85234.12, change: 0.04, up: true },
         { symbol: "ETHUSDT", last: 2130.45, change: -0.03, up: false },
         { symbol: "BNBUSDT", last: 630.12, change: 0.45, up: true },
-        { symbol: "NDX", last: 18450.00, change: 0.25, up: true },
-        { symbol: "SPX", last: 5200.50, change: -0.08, up: false },
-        { symbol: "XAUUSD", last: 2350.10, change: -10.25, up: false },
+        { symbol: "SOLUSDT", last: 145.20, change: 1.25, up: true },
+        { symbol: "ADP", last: 245.20, change: 0.25, up: true },
+        { symbol: "XRPUSDT", last: 0.62, change: -0.08, up: false },
+        { symbol: "ADAUSDT", last: 0.45, change: -1.25, up: false },
     ];
 
     return (
@@ -31,7 +35,11 @@ export function Watchlist() {
             {/* List */}
             <div className="flex-1 overflow-y-auto">
                 {watchlistItems.map((item) => (
-                    <div key={item.symbol} className="group flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-[#2a2e39]">
+                    <div
+                        key={item.symbol}
+                        onClick={() => setSymbol(item.symbol)}
+                        className={`group flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-[#2a2e39] ${currentSymbol === item.symbol ? 'bg-[#2a2e39]' : ''}`}
+                    >
                         <div className="flex flex-col w-20">
                             <span className="text-sm font-semibold text-[#d1d4dc] group-hover:text-white">{item.symbol}</span>
                             <span className="text-[10px] text-[#505d74]">USDT</span>
